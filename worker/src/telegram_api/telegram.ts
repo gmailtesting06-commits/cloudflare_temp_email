@@ -37,42 +37,15 @@ const getTgMessages = async (
 
 // Bilingual command descriptions with full usage instructions
 const COMMANDS = [
-    {
-        command: "start",
-        description: "开始使用 | Get started"
-    },
-    {
-        command: "new",
-        description: "新建邮箱, /new <name>@<domain>, name[a-z0-9]有效, 为空随机生成, @domain可选 | Create address, /new <name>@<domain>, name[a-z0-9] valid, empty=random, @domain optional"
-    },
-    {
-        command: "address",
-        description: "查看邮箱地址列表 | View address list"
-    },
-    {
-        command: "bind",
-        description: "绑定邮箱, /bind <邮箱地址凭证> | Bind address, /bind <credential>"
-    },
-    {
-        command: "unbind",
-        description: "解绑邮箱, /unbind <邮箱地址> | Unbind address, /unbind <address>"
-    },
-    {
-        command: "delete",
-        description: "删除邮箱, /delete <邮箱地址> | Delete address, /delete <address>"
-    },
-    {
-        command: "mails",
-        description: "查看邮件, /mails <邮箱地址>, 不输入地址默认第一个 | View mails, /mails <address>, default first if empty"
-    },
-    {
-        command: "cleaninvalidaddress",
-        description: "清理无效地址 | Clean invalid addresses"
-    },
-    {
-        command: "lang",
-        description: "设置语言 /lang <zh|en> | Set language /lang <zh|en>"
-    },
+    { command: "start", description: "Get started" },
+    { command: "new", description: "Create address, /new <name>@<domain>, name[a-z0-9] valid, empty=random, @domain optional" },
+    { command: "address", description: "View address list" },
+    { command: "bind", description: "Bind address, /bind <credential>" },
+    { command: "unbind", description: "Unbind address, /unbind <address>" },
+    { command: "delete", description: "Delete address, /delete <address>" },
+    { command: "mails", description: "View mails, /mails <address>, default first if empty" },
+    { command: "cleaninvalidaddress", description: "Clean invalid addresses" },
+    { command: "lang", description: "Set language /lang <zh|en>" },
 ]
 
 const formatAiExtractForTelegram = (
