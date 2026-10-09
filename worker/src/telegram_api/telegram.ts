@@ -143,12 +143,17 @@ export function newTelegramBot(c: Context<HonoCustomType>, token: string): Teleg
         const prefix = trimLower(c.env.PREFIX)
         const domains = getDomains(c);
         const commands = getTelegramCommands(c);
-        return await ctx.reply(
+                return await ctx.reply(
             `${msgs.TgWelcomeMsg}\n\n`
             + (prefix ? `${msgs.TgCurrentPrefixMsg} ${prefix}\n` : '')
             + `${msgs.TgCurrentDomainsMsg} ${JSON.stringify(domains)}\n`
             + `${msgs.TgAvailableCommandsMsg}\n`
-            + commands.map(cmd => `/${cmd.command}: ${cmd.description}`).join("\n")
+            + commands.map(cmd => `/${cmd.command}: ${cmd.description}`).join("\n"),
+            Markup.inlineKeyboard([
+                [Markup.button.callback("📧 New Address", "btn:new"),
+                 Markup.button.callback("📋 My Addresses", "btn:address")],
+                [Markup.button.callback("📥 Check Mails", "btn:mails")],
+            ])
         );
     });
 
@@ -378,11 +383,43 @@ export function newTelegramBot(c: Context<HonoCustomType>, token: string): Teleg
         }
     });
 
-    bot.on(callbackQuery("data"), async ctx => {
+       bot.on(callbackQuery("data"), async ctx => {
         const msgs = await getTgMessages(c, ctx);
         // Use ctx.callbackQuery.data
         try {
             const data = ctx.callbackQuery.data;
+            const cbUserId = ctx.callbackQuery?.from?.id?.toString();
+            if (data && data.startsWith("btn:")) {
+                if (!cbUserId) {
+                    await ctx.answerCbQuery(msgs.TgUnableGetUserInfoMsg);
+                    return;
+                }
+                if (data === "btn:new") {
+                    try {
+                        const res = await tgUserNewAddress(c, cbUserId, "", msgs);
+                        await ctx.reply(`${msgs.TgCreateSuccessMsg}\n`
+                            + `${msgs.TgAddressMsg} ${res.address}\n`
+                            + (res.password ? `${msgs.TgPasswordMsg} \`${res.password}\`\n` : '')
+                            + `${msgs.TgCredentialMsg} \`${res.jwt}\`\n`,
+                            { parse_mode: "Markdown" });
+                    } catch (e) {
+                        await ctx.reply(`${msgs.TgCreateFailedMsg} ${(e as Error).message}`);
+                    }
+                } else if (data === "btn:address") {
+                    try {
+                        const jwtList = await c.env.KV.get<string[]>(`${CONSTANTS.TG_KV_PREFIX}:${cbUserId}`, 'json') || [];
+                        const { addressList } = await jwtListToAddressData(c, jwtList, msgs);
+                        await ctx.reply(`${msgs.TgAddressListMsg}\n\n`
+                            + addressList.map(a => `${msgs.TgAddressMsg} ${a}`).join("\n"));
+                    } catch (e) {
+                        await ctx.reply(`${msgs.TgGetAddressFailedMsg} ${(e as Error).message}`);
+                    }
+                } else if (data === "btn:mails") {
+                    await queryMail(ctx, "", 0, false);
+                }
+                await ctx.answerCbQuery();
+                return;
+            }
             if (data && data.startsWith("mail_") && data.split("_").length === 3) {
                 const [_, queryAddress, mailIndex] = data.split("_");
                 await queryMail(ctx, queryAddress, parseInt(mailIndex), true);
