@@ -156,11 +156,16 @@ const checkoutUserRolePayload = async (
 
 // api auth
 app.use('/api/*', async (c, next) => {
-	if (c.req.path.startsWith("/api/new_address")) {
-		await checkUserPayload(c);
-		await next();
-		return;
-	}
+	    if (c.req.path.startsWith("/api/new_address")) {
+        // API key protection: if API_KEY env var is set, require matching X-API-Key header
+        const requiredApiKey = c.env.API_KEY as string | undefined;
+        if (requiredApiKey && c.req.header("x-api-key") !== requiredApiKey) {
+            return c.json({ code: ErrorCode.AUTH_API_KEY_INVALID, message: "Invalid or missing API key" }, 401);
+        }
+        await checkUserPayload(c);
+        await next();
+        return;
+    }
 	if (c.req.path.startsWith("/api/settings")
 		|| c.req.path.startsWith("/api/send_mail")
 	) {
